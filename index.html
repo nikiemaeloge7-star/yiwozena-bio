@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yiwozena Bio - Restaurant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <div id="espace-client">
+            <h1>Bienvenue chez Yiwozena Bio 🌿</h1>
+            <p class="subtitle">Découvrez nos plats sains et commandez en un clic ou sur WhatsApp !</p>
+            <div id="menu-clients" class="menu-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Charger le menu au démarrage
+        window.addEventListener('DOMContentLoaded', chargerMenuClient);
+
+        async function chargerMenuClient() {
+            const res = await fetch('/api/repas');
+            const plats = await res.json();
+            const div = document.getElementById('menu-clients');
+            
+            if(plats.length === 0) {
+                div.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #7f8c8d;'>Aucun plat disponible pour le moment.</p>";
+                return;
+            }
+
+            div.innerHTML = plats.map(p => {
+                const messageWa = encodeURIComponent(`Bonjour Yiwozena Bio ! 🌿 Je souhaite commander le plat : ${p.name}`);
+                const numeroWa = "22654474969";
+
+                return `
+                <div class="plat-card">
+                    <img src="${p.image}" alt="${p.name}" class="plat-image">
+                    <div class="plat-details">
+                        <div>
+                            <h3>${p.name}</h3>
+                            <p class="plat-price">${p.price} FCFA</p>
+                        </div>
+                        <div>
+                            <button class="btn-order" onclick="creerCommande('${p.name}', ${p.price})">🛒 Commander sur le site</button>
+                            <a href="https://wa.me/${numeroWa}?text=${messageWa}" target="_blank" class="btn-whatsapp">💬 Commander par WhatsApp</a>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        async function creerCommande(nomPlat, prixPlat) {
+            const nomClient = prompt("Votre nom pour la commande :");
+            if (!nomClient || nomClient.trim() === "") return;
+
+            const telephoneClient = prompt("Votre numéro de téléphone pour vous joindre :");
+            if (!telephoneClient || telephoneClient.trim() === "") {
+                return alert("Le numéro de téléphone est obligatoire pour valider la commande.");
+            }
+
+            // Sécurité : Uniquement des chiffres (on enlève les espaces et le + pour tester)
+            const telephoneNettoye = telephoneClient.replace(/[\s\+]/g, ''); 
+            if (!/^[0-9]+$/.test(telephoneNettoye)) {
+                return alert("⛔ Erreur : Le numéro de téléphone est invalide. Veuillez entrer uniquement des chiffres.");
+            }
+
+            await fetch('/api/commandes', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    nomClient: nomClient, 
+                    telephone: telephoneClient, 
+                    plats: [nomPlat], 
+                    total: prixPlat 
+                })
+            });
+            alert(`✅ Validé ! Votre commande est envoyée chez Yiwozena Bio. Nous vous contacterons au ${telephoneClient}.`);
+        }
+    </script>
+</body>
+</html>

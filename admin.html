@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Yiwozena Bio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>⚙️ Tableau de Bord - Yiwozena Bio</h1>
+        <p class="subtitle">Espace privé de gestion du restaurant</p>
+
+        <div class="form-section">
+            <h2>Ajouter un plat au menu</h2>
+            <input type="text" id="plat-nom" placeholder="Nom du plat (ex: Salade Bio, Poulet Yassa...)">
+            <input type="number" id="plat-prix" placeholder="Prix (en FCFA)">
+            <input type="text" id="plat-image" placeholder="Lien de l'image (URL internet) - Optionnel">
+            <button class="btn-primary" onclick="ajouterAuMenu()">Ajouter le plat</button>
+        </div>
+
+        <div class="management-grid">
+            <div>
+                <h2>Plats en ligne</h2>
+                <div id="menu-admin-liste" class="liste-flux"></div>
+            </div>
+            <div>
+                <h2>📋 Commandes à préparer (Via le site)</h2>
+                <div id="commandes-liste" class="liste-flux"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sécurité stricte dès l'ouverture de la page gérant
+        const mdp = prompt("Veuillez entrer le mot de passe gérant :");
+        if(mdp !== "resto123") {
+            alert("⛔ Accès refusé.");
+            window.location.href = "/"; // Redirige immédiatement vers l'espace client
+        } else {
+            // Si le mot de passe est bon, on charge les données
+            chargerDonneesAdmin();
+        }
+
+        async function chargerDonneesAdmin() {
+            const resPlats = await fetch('/api/repas');
+            const plats = await resPlats.json();
+            document.getElementById('menu-admin-liste').innerHTML = plats.map(p => `
+                <div class="card-item">
+                    <div><strong>${p.name}</strong><br><small>${p.price} FCFA</small></div>
+                    <button class="btn-danger" onclick="supprimerDuMenu('${p._id}')">Retirer</button>
+                </div>
+            `).join('');
+
+            const resCommandes = await fetch('/api/commandes');
+            const commandes = await resCommandes.json();
+            
+            if(commandes.length === 0) {
+                document.getElementById('commandes-liste').innerHTML = "<p class='empty-msg'>Aucune commande reçue via le site.</p>";
+                return;
+            }
+
+            document.getElementById('commandes-liste').innerHTML = commandes.map(c => `
+                <div class="card-item card-order">
+                    <div>
+                        <strong style="color:#d35400">👤 ${c.nomClient}</strong>
+                        <span style="font-size: 12px; font-weight: bold; color: #2980b9; margin-left: 10px;">📞 ${c.telephone}</span>
+                        <p style="margin:5px 0 0 0; font-size:14px;">Plat : ${c.plats.join(', ')}</p>
+                    </div>
+                    <span class="status-badge">En cours</span>
+                </div>
+            `).join('');
+        }
+
+        async function ajouterAuMenu() {
+            const name = document.getElementById('plat-nom').value;
+            const price = document.getElementById('plat-prix').value;
+            const imageInput = document.getElementById('plat-image').value;
+            
+            if(!name || !price) return alert("Le nom et le prix sont obligatoires.");
+
+            const bodyData = { name, price };
+            if(imageInput) bodyData.image = imageInput;
+
+            await fetch('/api/repas/add', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(bodyData)
+            });
+
+            document.getElementById('plat-nom').value = "";
+            document.getElementById('plat-prix').value = "";
+            document.getElementById('plat-image').value = "";
+            chargerDonneesAdmin();
+        }
+
+        async function supprimerDuMenu(id) {
+            if(confirm("Retirer ce plat ?")) {
+                await fetch(`/api/repas/${id}`, { method: 'DELETE' });
+                chargerDonneesAdmin();
+            }
+        }
+    </script>
+</body>
+</html>

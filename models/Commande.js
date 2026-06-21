@@ -7,4 +7,6 @@ const CommandeSchema = new mongoose.Schema({
     statut: { type: String, default: 'En attente' }
 });
 
-module.exports = mongoose.model('Commande', CommandeSchema);
+const Commande = mongoose.models.Commande || mongoose.model('Commande', CommandeSchema);
+
+module.exports = Commande;

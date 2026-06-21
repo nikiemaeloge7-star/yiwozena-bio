@@ -61,7 +61,7 @@ app.get('/api/commandes', async (req, res) => {
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 app.get('/gerant', (req, res) => res.sendFile(__dirname + '/admin.html'));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 7860;
 app.listen(PORT, () => {
     console.log(`🚀 Yiwozena Bio lancé sur le port ${PORT}`);
 });

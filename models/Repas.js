@@ -9,4 +9,6 @@ const CommandeSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Commande', CommandeSchema);
+const Repas = mongoose.models.Repas || mongoose.model('Repas', RepasSchema);
+
+module.exports = Repas;

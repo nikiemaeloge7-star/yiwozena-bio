@@ -1,44 +1,43 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/Repas');
+const Repas = require('./Repas'); // Assure-toi que le chemin est correct
 
-// Route GET
+// 1. Route pour récupérer tous les plats
 router.get('/', async (req, res) => {
     try {
-        const products = await Product.find();
-        res.status(200).json(products);
+        const repas = await Repas.find();
+        res.json(repas);
     } catch (err) {
+        console.error("Erreur lors de la récupération :", err);
         res.status(500).json({ message: err.message });
     }
 });
 
-// N'oublie surtout pas cette ligne !
-module.exports = router;
-// Route pour supprimer un produit
-router.delete('/:id', async (req, res) => {
-    try {
-        await Product.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "Produit supprimé avec succès" });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// Route pour modifier un produit
-router.put('/:id', async (req, res) => {
-    try {
-        const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.status(200).json(updatedProduct);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
+// 2. Route pour AJOUTER un plat (Celle qui te manquait !)
 router.post('/add', async (req, res) => {
     try {
-        const newProduct = new Product(req.body);
-        const savedProduct = await newProduct.save();
-        res.status(201).json(savedProduct);
+        const nouveauRepas = new Repas({
+            nom: req.body.nom,
+            prix: req.body.prix
+        });
+        const savedRepas = await nouveauRepas.save();
+        res.status(201).json(savedRepas);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error("Erreur lors de l'ajout :", err);
+        res.status(500).json({ message: err.message });
     }
 });
+
+// 3. Route pour supprimer un plat
+router.delete('/:id', async (req, res) => {
+    try {
+        await Repas.findByIdAndDelete(req.params.id);
+        res.json({ message: "Repas supprimé" });
+    } catch (err) {
+        console.error("Erreur lors de la suppression :", err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Cette ligne doit TOUJOURS être à la fin
+module.exports = router;

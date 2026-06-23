@@ -2,105 +2,90 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Yiwozena Bio</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Administration - Yiwozena Bio</title>
+    <style>
+        /* Ajoute ton CSS ici ou garde ton lien vers style.css */
+        .card-item { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .form-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>⚙️ Tableau de Bord - Yiwozena Bio</h1>
-        <p class="subtitle">Espace privé de gestion du restaurant</p>
-
-        <div class="form-section">
-            <h2>Ajouter un plat au menu</h2>
-            <input type="text" id="plat-nom" placeholder="Nom du plat (ex: Salade Bio, Poulet Yassa...)">
-            <input type="number" id="plat-prix" placeholder="Prix (en FCFA)">
-            <input type="text" id="plat-image" placeholder="Lien de l'image (URL internet) - Optionnel">
-            <button class="btn-primary" onclick="ajouterAuMenu()">Ajouter le plat</button>
-        </div>
-
-        <div class="management-grid">
-            <div>
-                <h2>Plats en ligne</h2>
-                <div id="menu-admin-liste" class="liste-flux"></div>
-            </div>
-            <div>
-                <h2>📋 Commandes à préparer (Via le site)</h2>
-                <div id="commandes-liste" class="liste-flux"></div>
-            </div>
-        </div>
+<div class="container">
+    <div class="form-section">
+        <h2>Ajouter un plat au menu</h2>
+        <input type="text" id="plat-nom" placeholder="Nom du plat (ex: Poulet Yassa)">
+        <input type="number" id="plat-prix" placeholder="Prix (en FCFA)">
+        <input type="text" id="plat-image" placeholder="Lien de l'image (URL) - Optionnel">
+        <button onclick="ajouterAuMenu()">Ajouter le plat</button>
     </div>
 
-    <script>
-        // Sécurité stricte dès l'ouverture de la page gérant
-        const mdp = prompt("Veuillez entrer le mot de passe gérant :");
-        if(mdp !== "resto123") {
-            alert("⛔ Accès refusé.");
-            window.location.href = "/"; // Redirige immédiatement vers l'espace client
-        } else {
-            // Si le mot de passe est bon, on charge les données
-            chargerDonneesAdmin();
-        }
+    <div id="menu-admin-liste">
+        </div>
+</div>
 
-        async function chargerDonneesAdmin() {
-            const resPlats = await fetch('/api/repas');
-            const plats = await resPlats.json();
-            document.getElementById('menu-admin-liste').innerHTML = plats.map(p => `
+<script>
+    // Charger les plats au démarrage
+    document.addEventListener('DOMContentLoaded', chargerDonneesAdmin);
+
+    async function chargerDonneesAdmin() {
+        try {
+            const res = await fetch('/api/repas');
+            const plats = await res.json();
+            const liste = document.getElementById('menu-admin-liste');
+            
+            liste.innerHTML = plats.map(p => `
                 <div class="card-item">
-                    <div><strong>${p.name}</strong><br><small>${p.price} FCFA</small></div>
-                    <button class="btn-danger" onclick="supprimerDuMenu('${p._id}')">Retirer</button>
+                    <strong>${p.nom}</strong><br>
+                    <small>${p.prix} FCFA</small><br>
+                    <button onclick="supprimerDuMenu('${p._id}')">Supprimer</button>
                 </div>
             `).join('');
-
-            const resCommandes = await fetch('/api/commandes');
-            const commandes = await resCommandes.json();
-            
-            if(commandes.length === 0) {
-                document.getElementById('commandes-liste').innerHTML = "<p class='empty-msg'>Aucune commande reçue via le site.</p>";
-                return;
-            }
-
-            document.getElementById('commandes-liste').innerHTML = commandes.map(c => `
-                <div class="card-item card-order">
-                    <div>
-                        <strong style="color:#d35400">👤 ${c.nomClient}</strong>
-                        <span style="font-size: 12px; font-weight: bold; color: #2980b9; margin-left: 10px;">📞 ${c.telephone}</span>
-                        <p style="margin:5px 0 0 0; font-size:14px;">Plat : ${c.plats.join(', ')}</p>
-                    </div>
-                    <span class="status-badge">En cours</span>
-                </div>
-            `).join('');
+        } catch (err) {
+            console.error("Erreur chargement :", err);
         }
+    }
 
-        async function ajouterAuMenu() {
-            const name = document.getElementById('plat-nom').value;
-            const price = document.getElementById('plat-prix').value;
-            const imageInput = document.getElementById('plat-image').value;
-            
-            if(!name || !price) return alert("Le nom et le prix sont obligatoires.");
+    async function ajouterAuMenu() {
+        const nom = document.getElementById('plat-nom').value;
+        const prix = document.getElementById('plat-prix').value;
+        const image = document.getElementById('plat-image').value;
 
-            const bodyData = { name, price };
-            if(imageInput) bodyData.image = imageInput;
+        // On envoie exactement ce que le modèle attend : 'nom' et 'prix'
+        const bodyData = { nom, prix };
+        if (image) bodyData.image = image;
 
-            await fetch('/api/repas/add', {
+        try {
+            const response = await fetch('/api/repas/add', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bodyData)
             });
 
-            document.getElementById('plat-nom').value = "";
-            document.getElementById('plat-prix').value = "";
-            document.getElementById('plat-image').value = "";
-            chargerDonneesAdmin();
+            if (response.ok) {
+                document.getElementById('plat-nom').value = "";
+                document.getElementById('plat-prix').value = "";
+                document.getElementById('plat-image').value = "";
+                chargerDonneesAdmin(); // Recharger la liste
+            } else {
+                alert("Erreur lors de l'ajout du plat");
+            }
+        } catch (err) {
+            console.error("Erreur lors de l'ajout :", err);
         }
+    }
 
-        async function supprimerDuMenu(id) {
-            if(confirm("Retirer ce plat ?")) {
+    async function supprimerDuMenu(id) {
+        if (confirm("Retirer ce plat ?")) {
+            try {
                 await fetch(`/api/repas/${id}`, { method: 'DELETE' });
                 chargerDonneesAdmin();
+            } catch (err) {
+                console.error("Erreur suppression :", err);
             }
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>

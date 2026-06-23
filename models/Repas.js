@@ -1,14 +1,10 @@
-// models/Commande.js
 const mongoose = require('mongoose');
 
-const CommandeSchema = new mongoose.Schema({
-    client: String,
-    plats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Repas' }],
-    total: Number,
-    statut: { type: String, enum: ['En attente', 'En préparation', 'Terminé'], default: 'En attente' },
-    date: { type: Date, default: Date.now }
+const RepasSchema = new mongoose.Schema({
+    nom: { type: String, required: true },
+    prix: { type: Number, required: true },
+    description: String
 });
 
-const Repas = mongoose.models.Repas || mongoose.model('Repas', RepasSchema);
-
-module.exports = Repas;
+// Sécurité pour éviter le double enregistrement
+module.exports = mongoose.models.Repas || mongoose.model('Repas', RepasSchema);

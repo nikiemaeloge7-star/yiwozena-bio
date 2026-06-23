@@ -10,7 +10,7 @@ app.use(express.static('.'));
 const dbURI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/ma_plateforme";
 
 mongoose.connect(dbURI)
-    .then(() => console.log("✅ Connexion MongoDB réussie"))
+    .then(() => console.log("✅ Connexion MongoDB réussie et stable !"))
     .catch(err => console.error("❌ Erreur MongoDB :", err));
 
 // --- MODÈLES (Assure-toi que ces fichiers existent dans ton dossier /models) ---

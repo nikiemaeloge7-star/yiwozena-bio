@@ -45,36 +45,35 @@
             console.error("Erreur chargement :", err);
         }
     }
+async function ajouterAuMenu() {
+    // On récupère les valeurs avec les bons ID
+    const nom = document.getElementById('plat-nom').value;
+    const prix = document.getElementById('plat-prix').value;
+    const imageInput = document.getElementById('plat-image').value;
 
-    async function ajouterAuMenu() {
-        const nom = document.getElementById('plat-nom').value;
-        const prix = document.getElementById('plat-prix').value;
-        const image = document.getElementById('plat-image').value;
+    // On crée l'objet avec les clés 'nom' et 'prix' attendues par ta base
+    const bodyData = { nom: nom, prix: prix };
+    if (imageInput) bodyData.image = imageInput;
 
-        // On envoie exactement ce que le modèle attend : 'nom' et 'prix'
-        const bodyData = { nom, prix };
-        if (image) bodyData.image = image;
+    try {
+        const response = await fetch('/api/repas/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData)
+        });
 
-        try {
-            const response = await fetch('/api/repas/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bodyData)
-            });
+        if (!response.ok) throw new Error("Erreur serveur");
 
-            if (response.ok) {
-                document.getElementById('plat-nom').value = "";
-                document.getElementById('plat-prix').value = "";
-                document.getElementById('plat-image').value = "";
-                chargerDonneesAdmin(); // Recharger la liste
-            } else {
-                alert("Erreur lors de l'ajout du plat");
-            }
-        } catch (err) {
-            console.error("Erreur lors de l'ajout :", err);
-        }
+        // Nettoyer les champs après succès
+        document.getElementById('plat-nom').value = "";
+        document.getElementById('plat-prix').value = "";
+        document.getElementById('plat-image').value = "";
+        chargerDonneesAdmin(); // Recharger la liste
+    } catch (err) {
+        console.error("Erreur :", err);
+        alert("Erreur lors de l'envoi. Vérifie la console.");
     }
-
+}
     async function supprimerDuMenu(id) {
         if (confirm("Retirer ce plat ?")) {
             try {
